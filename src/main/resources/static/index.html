@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>API de Produtos</title>
+</head>
+<body>
+<h1>API de Produtos</h1>
+
+<h2>Listar Produtos</h2>
+<button onclick="listarProdutos()">Listar Produtos</button>
+<div id="listaProdutos"></div>
+
+<h2>Inserir Produto</h2>
+<form id="formInserir">
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" required><br>
+    <label for="descricao">Descrição:</label>
+    <input type="text" id="descricao" required><br>
+    <label for="preco">Preço:</label>
+    <input type="number" id="preco" step="0.01" required><br>
+    <button type="button" onclick="inserirProduto()">Inserir Produto</button>
+</form>
+
+<h2>Excluir Produto</h2>
+<label for="idExcluir">ID do Produto:</label>
+<input type="number" id="idExcluir" required>
+<button type="button" onclick="excluirProduto()">Excluir Produto</button>
+
+<h2>Atualizar Produto</h2>
+<label for="idAtualizar">ID do Produto:</label>
+<input type="number" id="idAtualizar" required><br>
+<label for="nomeAtualizar">Novo Nome:</label>
+<input type="text" id="nomeAtualizar" required><br>
+<label for="descricaoAtualizar">Nova Descrição:</label>
+<input type="text" id="descricaoAtualizar" required><br>
+<label for="precoAtualizar">Novo Preço:</label>
+<input type="number" id="precoAtualizar" step="0.01" required><br>
+<button type="button" onclick="atualizarProduto()">Atualizar Produto</button>
+
+<h2>Obter Produto por ID</h2>
+<label for="idObter">ID do Produto:</label>
+<input type="number" id="idObter" required>
+<button type="button" onclick="obterProduto()">Obter Produto</button>
+<div id="produtoObtido"></div>
+
+<script>
+    // Função para listar produtos
+    function listarProdutos() {
+        fetch('/api/produtos/selecionar')
+            .then(response => response.json())
+            .then(data => {
+                const listaProdutos = document.getElementById('listaProdutos');
+                listaProdutos.innerHTML = '';
+                data.forEach(produto => {
+                    listaProdutos.innerHTML += `<p>${produto.nome} - ${produto.descricao} - R$ ${produto.preco}</p>`;
+                });
+            })
+            .catch(error => console.error('Erro ao listar produtos:', error));
+    }
+
+    // Função para inserir um novo produto
+    function inserirProduto() {
+        const nome = document.getElementById('nome').value;
+        const descricao = document.getElementById('descricao').value;
+        const preco = parseFloat(document.getElementById('preco').value);
+
+        const novoProduto = {
+            nome: nome,
+            descricao: descricao,
+            preco: preco
+        };
+
+        fetch('/api/produtos/inserir', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(novoProduto)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                listarProdutos();
+            })
+            .catch(error => console.error('Erro ao inserir produto:', error));
+    }
+
+    // Função para excluir um produto por ID
+    function excluirProduto() {
+        const idExcluir = parseInt(document.getElementById('idExcluir').value);
+
+        fetch(`/api/produtos/excluir/${idExcluir}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.status === 201) {
+                    console.log('Produto excluído com sucesso');
+                    listarProdutos();
+                } else {
+                    console.error('Erro ao excluir produto');
+                }
+            })
+            .catch(error => console.error('Erro ao excluir produto:', error));
+    }
+
+    // Função para atualizar um produto por ID
+    function atualizarProduto() {
+        const idAtualizar = parseInt(document.getElementById('idAtualizar').value);
+        const nomeAtualizar = document.getElementById('nomeAtualizar').value;
+        const descricaoAtualizar = document.getElementById('descricaoAtualizar').value;
+        const precoAtualizar = parseFloat(document.getElementById('precoAtualizar').value);
+
+        const produtoAtualizado = {
+            nome: nomeAtualizar,
+            descricao: descricaoAtualizar,
+            preco: precoAtualizar
+        };
+
+        fetch(`/api/produtos/atualizar/${idAtualizar}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(produtoAtualizado)
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    console.log('Produto atualizado com sucesso');
+                    listarProdutos();
+                } else {
+                    console.error('Erro ao atualizar produto');
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar produto:', error));
+    }
+
+    // Função para obter um produto por ID
+    function obterProduto() {
+        const idObter = parseInt(document.getElementById('idObter').value);
+
+        fetch(`/api/produtos/selecionar/${idObter}`)
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    console.error('Produto não encontrado');
+                    return null;
+                }
+            })
+            .then(produto => {
+                if (produto) {
+                    const produtoObtido = document.getElementById('produtoObtido');
+                    produtoObtido.innerHTML = `<p>${produto.nome} - ${produto.descricao} - R$ ${produto.preco}</p>`;
+                }
+            })
+            .catch(error => console.error('Erro ao obter produto:', error));
+    }
+
+</script>
+</body>
+</html>
